@@ -1,6 +1,6 @@
-# Abuzuriaz Cattle Farm — Admin foundation
+# Abuzuriaz Cattle Farm — Admin panel
 
-A Next.js 14 + TypeScript + Tailwind CSS operations dashboard foundation for a separate admin deployment. It is intentionally staged: the screens and security seams are production-shaped, while the repository has no access to the public site's Supabase credentials or schema. Demo records are clearly labeled in module tables and live data is not claimed.
+Separate Next.js 14 admin deployment for the public Abuzuriaz Cattle Farm site. The app now has real Supabase Auth login, a server-side `profiles` role check, protected middleware/layout boundaries, and validated server-action seams for moderation, livestock, milk availability, orders, suspensions, reports, notifications, and audit logging.
 
 ## Local setup
 ```bash
@@ -8,18 +8,23 @@ cp .env.example .env.local
 npm install
 npm run dev
 npm run typecheck
+npm run lint
 npm run build
 ```
-Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` only after confirming they belong to the same Supabase project as the public site. The browser receives the anon key only; never add a service-role key to `.env.local`, Vercel client variables, or browser code.
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the same project used by the public website. `SUPABASE_SECRET_KEY` is optional and server-only; it is not used by client components and must never be prefixed with `NEXT_PUBLIC_`. With no Supabase variables, screens are explicitly demo-only and mutations are unavailable.
 
 ## First administrator
-Do not make public registration capable of creating admins. In Supabase Auth, invite or create the first user through a controlled operator flow, then insert/update that user's `profiles.role` to `admin` using a protected migration or SQL editor session. Verify the row's `id` matches `auth.users.id`, `is_active=true`, and test the login. The eventual production `requireRole` implementation must read the trusted `profiles`/role-assignment table server-side, not user-editable metadata.
+Create/invite the account in Supabase Auth, then have a trusted operator set its `profiles.role` to `admin` and `is_active=true`. There is no public admin registration and Auth alone does not grant admin access. Test an ordinary user and an inactive/no-profile user cannot enter `/dashboard`.
 
-## Database and storage
-First inspect the public site's existing tables, columns, enum values, and RLS policies. Reuse compatible entities and reconcile the additive `supabase/schema.sql`; do not run a destructive reset against the shared project. Create a private `farm-media` bucket and adapt the commented storage policies to allow only authorized staff to write farm assets while public listing media is served through intentional read policies.
+## Shared database safety
+`supabase/schema.sql` is additive scaffolding, not proof of compatibility with the public site. Before applying it, inspect the public site's migrations/live schema, reconcile table names, columns, enum values, foreign keys, storage buckets, and existing RLS policies, then apply in a reviewed migration. Do not reset the shared project or create duplicate business tables.
 
-## Vercel
-Import the repository as a Next.js project, set the two public Supabase environment variables for Preview and Production separately, deploy, configure the admin domain/subdomain, and validate Supabase Auth redirect URLs for both domains.
+## Vercel deployment
+1. Push this repository to its own GitHub repository; do not combine it with the public website.
+2. In Vercel, **Add New Project**, import this repository, select the Next.js framework, and use the repository's default build command `npm run build`.
+3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Preview and Production separately. Add `SUPABASE_SECRET_KEY` only if a reviewed server operation requires it, with no `NEXT_PUBLIC_` prefix.
+4. Deploy, then add the admin domain/subdomain in Vercel. In Supabase Auth URL configuration, add the exact production callback/site URL and the Vercel preview URL(s) used for testing.
+5. Confirm `/manus-routes.json` returns JSON, verify unauthenticated redirect to `/login`, test authorized role access, and inspect Vercel logs for configuration errors. Do not claim deployment success until these checks pass.
 
-## What remains dependent on the public site
-The public site's schema, credentials, existing Auth configuration, storage buckets, payment provider, notification provider, domain and published-content contract were not available. Therefore actual Supabase-backed statistics and CRUD, inventory transaction/RPC safety, uploaded media, order/payment webhooks, notifications, granular staff permissions, MFA, CSV queries and public-site synchronization are open integration work, not completed claims. See `TODO.md`.
+## Current boundaries
+Demo dashboard metrics remain labeled demo data until repository queries are wired to the inspected public schema. Media uploads, payment verification/webhooks, granular staff permissions, MFA, and end-to-end tests against a non-production Supabase project remain configuration/integration work.
