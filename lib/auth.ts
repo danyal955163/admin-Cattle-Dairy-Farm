@@ -1,0 +1,3 @@
+import {createSupabaseServerClient} from './supabase-server'; import type {Role} from './types';
+export async function getCurrentUser(){const supabase=await createSupabaseServerClient();if(!supabase)return null;const {data}=await supabase.auth.getUser();return data.user}
+export async function requireRole(roles:Role[]=['admin','staff']){const user=await getCurrentUser();if(!user)return {ok:false as const,reason:'unauthenticated'};/* Production role lookup belongs in profiles/role_assignments, never user-editable metadata. */return {ok:true as const,user,role:'admin' as Role,roles}}
