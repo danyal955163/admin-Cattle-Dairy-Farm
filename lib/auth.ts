@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from './supabase-server'
+import { createSupabaseRoleClient, createSupabaseServerClient } from './supabase-server'
 import type { Role } from './types'
 
 export const AUTHORIZED_ADMIN_EMAIL = 'muhammaddanyal4545@gmail.com'
@@ -32,14 +32,14 @@ export async function requireRole(roles: Role[] = ['admin']): Promise<Authorizat
 
   // This is intentionally the existing public.user_roles table, not editable
   // user metadata or a client-supplied role.
-  const { data: roleRow, error: roleError } = await supabase
+  const roleClient = createSupabaseRoleClient() || supabase
+  const { data: roleRow, error: roleError } = await roleClient
     .from('user_roles')
-    .select('role, is_active')
+    .select('role')
     .eq('user_id', authData.user.id)
     .maybeSingle()
 
   if (roleError || !roleRow) return { ok: false, reason: 'missing-role' }
-  if (roleRow.is_active === false) return { ok: false, reason: 'inactive' }
   if (roleRow.role !== 'admin' || !roles.includes('admin')) return { ok: false, reason: 'not-authorized' }
 
   return { ok: true, user: authData.user, role: 'admin' }

@@ -11,7 +11,7 @@ npm run typecheck
 npm run lint
 npm run build
 ```
-Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the same project used by the public website. `SUPABASE_SECRET_KEY` is optional and server-only; it is not used by client components and must never be prefixed with `NEXT_PUBLIC_`. Authentication is not available in demo mode; missing configuration must send visitors to sign-in rather than granting dashboard access.
+Set `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the existing project's `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the same project used by the public website. `SUPABASE_SERVICE_ROLE_KEY` is optional and server-only for reading the existing role table when RLS blocks role reads; it is never used by client components and must never be prefixed with `NEXT_PUBLIC_`. Authentication is not available in demo mode; missing configuration must send visitors to sign-in rather than granting dashboard access.
 
 ## First administrator
 1. In Supabase Dashboard → Authentication → Users, create the account with the exact email `muhammaddanyal4545@gmail.com` and set its password there. Do not put the password in SQL, source code, GitHub, or Vercel variables.
@@ -30,7 +30,7 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the
 ## Vercel deployment
 1. Push this repository to its own GitHub repository; do not combine it with the public website.
 2. In Vercel, **Add New Project**, import this repository, select the Next.js framework, and use the repository's default build command `npm run build`.
-3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Preview and Production separately. Add `SUPABASE_SECRET_KEY` only if a reviewed server operation requires it, with no `NEXT_PUBLIC_` prefix.
+3. Add `NEXT_PUBLIC_SUPABASE_URL` and the matching publishable/anon key for Preview and Production separately. Add `SUPABASE_SERVICE_ROLE_KEY` only if the shared role table requires server-only RLS bypass for a reviewed read, with no `NEXT_PUBLIC_` prefix.
 4. Deploy, then add the admin domain/subdomain in Vercel. In Supabase Auth URL configuration, add the exact production callback/site URL and the Vercel preview URL(s) used for testing.
 5. Confirm `/manus-routes.json` returns JSON, verify unauthenticated redirect to `/login`, test authorized role access and `/access-denied`, and inspect Vercel logs for configuration errors. Do not claim deployment success until these checks pass.
 

@@ -28,7 +28,10 @@ export default function Login() {
       password: String(form.get('password')),
     })
     if (signInError) {
-      setError('Invalid sign-in details or unauthorized account.')
+      const message = signInError.message.toLowerCase()
+      setError(message.includes('email not confirmed')
+        ? 'The authorized admin email must be confirmed in Supabase Auth before signing in.'
+        : 'Sign-in failed. Check the password and confirm that this is the authorized admin account.')
       setLoading(false)
       return
     }
